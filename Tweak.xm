@@ -14,7 +14,7 @@
 - (void)applicationOpenURL:(NSURL *)url withApplication:(id)application sender:(NSString *)sender publicURLsOnly:(BOOL)only animating:(BOOL)animating needsPermission:(BOOL)permission additionalActivationFlags:(id)flags activationHandler:(id)handler
 {
 	//%log;
-	if (! ([[url absoluteString] hasPrefix:@"itms-appss"] && [sender isEqualToString:@"com.saurik.Cydia"]) )
+	if (! (([[url absoluteString] hasPrefix:@"itms-appss"] || [[url absoluteString] hasPrefix:@"itms-apps"]) && [sender isEqualToString:@"com.saurik.Cydia"]) )
 	{
 		//NSLog(@"%sOKAY%s",KRED,KNORMAL);
 		%orig;
