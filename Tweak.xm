@@ -1,27 +1,57 @@
-#define KNORMAL  "\x1B[0m"
-#define KRED  "\x1B[31m"
+#import <Foundation/Foundation.h>
+#import <objc/runtime.h>
 
+
+%group SB70
 %hook SpringBoard
-
-/*
-- (BOOL)_requestPermissionToOpenURL:(id)openURL withApplication:(id)application sender:(id)sender
+//iOS 7.0
+- (void)applicationOpenURL:(NSURL *)url withApplication:(id)application sender:(NSString *)sender publicURLsOnly:(BOOL)only animating:(BOOL)animating needsPermission:(BOOL)permission additionalActivationFlags:(id)flags activationHandler:(/*^block*/id)handler
 {
-	%log;
-	return %orig;
-}
-*/
-
-- (void)applicationOpenURL:(NSURL *)url withApplication:(id)application sender:(NSString *)sender publicURLsOnly:(BOOL)only animating:(BOOL)animating needsPermission:(BOOL)permission additionalActivationFlags:(id)flags activationHandler:(id)handler
-{
-	//%log;
-	if (! (([[url absoluteString] hasPrefix:@"itms-appss"] || [[url absoluteString] hasPrefix:@"itms-apps"]) && [sender isEqualToString:@"com.saurik.Cydia"]) )
+	if (!( ([[url absoluteString] hasPrefix:@"itms-appss"] || [[url absoluteString] hasPrefix:@"itms-apps"]) && [sender isEqualToString:@"com.saurik.Cydia"]) )
 	{
-		//NSLog(@"%sOKAY%s",KRED,KNORMAL);
 		%orig;
 	}
 	else {
-		//NSLog(@"%sNO U SSDIA!!!%s",KRED,KNORMAL);
+		//Don't open
 	}
 }
-
 %end
+%end
+
+
+%group SB71
+%hook SpringBoard
+//iOS 7.1
+-(void)applicationOpenURL:(NSURL *)url withApplication:(id)application sender:(NSString *)sender publicURLsOnly:(BOOL)only animating:(BOOL)animating needsPermission:(BOOL)permission activationContext:(id)context activationHandler:(/*^block*/ id)handler
+{
+	if (! (([[url absoluteString] hasPrefix:@"itms-appss"] || [[url absoluteString] hasPrefix:@"itms-apps"]) && [sender isEqualToString:@"com.saurik.Cydia"]) )
+	{
+		%orig;
+	}
+	else {
+		//Don't open
+	}
+}
+%end
+%end
+
+
+%ctor
+{
+	Class SpringBoard = objc_getClass("SpringBoard");
+
+	//iOS 7.0
+	if ([SpringBoard instancesRespondToSelector:@selector(applicationOpenURL:withApplication:sender:publicURLsOnly:animating:needsPermission:additionalActivationFlags:activationHandler:)])
+	{
+		%init(SB70);
+	}
+	//iOS 7.1
+	else if ([SpringBoard instancesRespondToSelector:@selector(applicationOpenURL:withApplication:sender:publicURLsOnly:animating:needsPermission:activationContext:activationHandler:)])
+	{
+		%init(SB71);
+	}
+	else
+	{
+		NSLog(@"NoAdstoreOpen: Unsupported SpringBoard Version!");
+	}
+}
